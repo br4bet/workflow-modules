@@ -119,6 +119,7 @@ async function main() {
     const timeoutMinutes = parseInt(core.getInput('timeout_minutes') || '60', 10);
     const completeOnSuccess = (core.getInput('complete_on_success') || 'true').toLowerCase() === 'true';
     const discordWebhookUrl = core.getInput('discord_webhook_url') || process.env.DISCORD_WEBHOOK_URL;
+    core.info(`Discord webhook configurado: ${discordWebhookUrl ? 'Sim' : 'Não'}`);
 
     const headers = getAuthHeader(token);
     const now = new Date();
@@ -127,7 +128,8 @@ async function main() {
       month: '2-digit', 
       year: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      timeZone: 'America/Sao_Paulo'
     });
     const taskName = `[GMUD] ${casa} - ${ambiente} (por ${usuario}) - ${dateStr}`;
 
