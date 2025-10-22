@@ -121,7 +121,15 @@ async function main() {
     const discordWebhookUrl = core.getInput('discord_webhook_url') || process.env.DISCORD_WEBHOOK_URL;
 
     const headers = getAuthHeader(token);
-    const taskName = `[GMUD] ${casa} - ${ambiente} (por ${usuario})`;
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('pt-BR', { 
+      day: '2-digit', 
+      month: '2-digit', 
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+    const taskName = `[GMUD] ${casa} - ${ambiente} (por ${usuario}) - ${dateStr}`;
 
     // Criar GMUD
     core.info(`Criando GMUD: ${taskName} @ list ${listId} (status: ${statusPending})`);
