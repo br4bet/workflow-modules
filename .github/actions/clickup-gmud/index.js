@@ -178,6 +178,14 @@ async function main() {
     if (skipNonProduction && !isProduction) {
       core.info(`🚀 Ambiente não-produtivo detectado: ${ambiente}`);
       core.info(`⏭️ Pulando criação de GMUD (apenas para produção)`);
+      
+      // Notificar Discord - GMUD pulada
+      const commitMessage = process.env.GITHUB_EVENT_HEAD_COMMIT_MESSAGE || '';
+      const commitSha = process.env.GITHUB_SHA?.substring(0, 7) || '';
+      const commitInfo = commitSha && commitMessage ? `\n📝 \`${commitSha}\` ${commitMessage}` : '';
+      const skippedMessage = `⏭️ GMUD Pulada\n\n${casa} → ${ambiente}\n👤 ${usuario}${commitInfo}\n\nℹ️ Ambiente não-produtivo - GMUD não necessária`;
+      await sendDiscordNotification(discordWebhookUrl, skippedMessage);
+      
       core.setOutput('approved', 'true');
       core.setOutput('status', 'SKIPPED');
       core.setOutput('task_id', '');
