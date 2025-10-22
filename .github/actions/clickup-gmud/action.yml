@@ -45,6 +45,9 @@ inputs:
   complete_on_success:
     description: 'Marcar como COMPLETE após deploy?'
     default: 'true'
+  discord_webhook_url:
+    description: 'URL do webhook do Discord para notificações'
+    required: false
 
 outputs:
   task_id:
