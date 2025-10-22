@@ -54,6 +54,9 @@ inputs:
   include_pr_info:
     description: 'Incluir informações do PR na GMUD'
     default: 'true'
+  skip_non_production:
+    description: 'Pular GMUD para ambientes não-produtivos (dev, hml, etc)'
+    default: 'true'
 
 outputs:
   task_id:

@@ -163,9 +163,26 @@ async function main() {
     const discordWebhookUrl = core.getInput('discord_webhook_url') || process.env.DISCORD_WEBHOOK_URL;
     const includeCommitInfo = (core.getInput('include_commit_info') || 'true').toLowerCase() === 'true';
     const includePrInfo = (core.getInput('include_pr_info') || 'true').toLowerCase() === 'true';
+    const skipNonProduction = (core.getInput('skip_non_production') || 'true').toLowerCase() === 'true';
+    
     core.info(`Discord webhook configurado: ${discordWebhookUrl ? 'Sim' : 'Não'}`);
     core.info(`Input discord_webhook_url: ${core.getInput('discord_webhook_url') || 'não fornecido'}`);
     core.info(`Env DISCORD_WEBHOOK_URL: ${process.env.DISCORD_WEBHOOK_URL || 'não definido'}`);
+
+    // Verificar se deve pular GMUD para ambientes não-produtivos
+    const productionEnvironments = ['production', 'prod', 'main', 'master'];
+    const isProduction = productionEnvironments.some(env => 
+      ambiente.toLowerCase().includes(env.toLowerCase())
+    );
+    
+    if (skipNonProduction && !isProduction) {
+      core.info(`🚀 Ambiente não-produtivo detectado: ${ambiente}`);
+      core.info(`⏭️ Pulando criação de GMUD (apenas para produção)`);
+      core.setOutput('approved', 'true');
+      core.setOutput('status', 'SKIPPED');
+      core.setOutput('task_id', '');
+      return;
+    }
 
     const headers = getAuthHeader(token);
     const now = new Date();
