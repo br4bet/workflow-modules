@@ -102,41 +102,43 @@ async function sendDiscordNotification(webhookUrl, message) {
 }
 
 function generateGmudDescription(casa, ambiente, usuario, pipelineUrl, includeCommitInfo, includePrInfo) {
-  let description = `🚀 **Deploy Automatizado**\n\n`;
+  let description = `🚀 Deploy Automatizado\n\n`;
   
-  description += `**📋 Detalhes do Deploy:**\n`;
-  description += `• **Sistema:** ${casa}\n`;
-  description += `• **Ambiente:** ${ambiente}\n`;
-  description += `• **Executado por:** ${usuario}\n`;
-  description += `• **Data/Hora:** ${new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}\n\n`;
+  description += `📋 Detalhes:\n`;
+  description += `• Sistema: ${casa}\n`;
+  description += `• Ambiente: ${ambiente}\n`;
+  description += `• Executado por: ${usuario}\n`;
+  description += `• Data/Hora: ${new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}\n\n`;
   
   if (pipelineUrl) {
-    description += `**🔗 Links:**\n`;
-    description += `• [Pipeline GitHub](${pipelineUrl})\n\n`;
+    description += `🔗 Pipeline: ${pipelineUrl}\n\n`;
   }
   
   if (includeCommitInfo) {
-    const commitSha = process.env.GITHUB_SHA?.substring(0, 7) || 'N/A';
-    const commitMessage = process.env.GITHUB_EVENT_HEAD_COMMIT_MESSAGE || 'N/A';
-    const commitAuthor = process.env.GITHUB_EVENT_HEAD_COMMIT_AUTHOR_NAME || 'N/A';
+    const commitSha = process.env.GITHUB_SHA?.substring(0, 7) || '';
+    const commitMessage = process.env.GITHUB_EVENT_HEAD_COMMIT_MESSAGE || '';
+    const commitAuthor = process.env.GITHUB_EVENT_HEAD_COMMIT_AUTHOR_NAME || '';
     
-    description += `**📝 Informações do Commit:**\n`;
-    description += `• **SHA:** \`${commitSha}\`\n`;
-    description += `• **Mensagem:** ${commitMessage}\n`;
-    description += `• **Autor:** ${commitAuthor}\n\n`;
+    if (commitSha && commitMessage) {
+      description += `📝 Commit:\n`;
+      description += `• SHA: \`${commitSha}\`\n`;
+      description += `• Mensagem: ${commitMessage}\n`;
+      if (commitAuthor) description += `• Autor: ${commitAuthor}\n`;
+      description += `\n`;
+    }
   }
   
   if (includePrInfo && process.env.GITHUB_EVENT_NAME === 'pull_request') {
-    const prNumber = process.env.GITHUB_EVENT_NUMBER || 'N/A';
-    const prTitle = process.env.GITHUB_EVENT_PULL_REQUEST_TITLE || 'N/A';
+    const prNumber = process.env.GITHUB_EVENT_NUMBER || '';
+    const prTitle = process.env.GITHUB_EVENT_PULL_REQUEST_TITLE || '';
     
-    description += `**🔀 Informações do PR:**\n`;
-    description += `• **Número:** #${prNumber}\n`;
-    description += `• **Título:** ${prTitle}\n\n`;
+    if (prNumber) {
+      description += `🔀 Pull Request:\n`;
+      description += `• #${prNumber}: ${prTitle}\n\n`;
+    }
   }
   
-  description += `**⏳ Status:** Aguardando aprovação para prosseguir com o deploy.\n\n`;
-  description += `**📌 Observações:** Esta GMUD foi criada automaticamente pela pipeline de deploy.`;
+  description += `⏳ Aguardando aprovação para prosseguir com o deploy.`;
   
   return description;
 }
@@ -194,15 +196,16 @@ async function main() {
     }
 
     // Notificar Discord - GMUD criada
-    const commitMessage = process.env.GITHUB_EVENT_HEAD_COMMIT_MESSAGE || 'N/A';
-    const commitSha = process.env.GITHUB_SHA?.substring(0, 7) || 'N/A';
-    const gmudCreatedMessage = `🚀 **Nova GMUD Criada**\n\n**${casa}** → ${ambiente}\n👤 ${usuario}\n📝 \`${commitSha}\` ${commitMessage}\n🔗 [Abrir no ClickUp](https://app.clickup.com/t/${taskId})\n\n⏳ **Aguardando aprovação...**`;
+    const commitMessage = process.env.GITHUB_EVENT_HEAD_COMMIT_MESSAGE || '';
+    const commitSha = process.env.GITHUB_SHA?.substring(0, 7) || '';
+    const commitInfo = commitSha && commitMessage ? `\n📝 \`${commitSha}\` ${commitMessage}` : '';
+    const gmudCreatedMessage = `🚀 Nova GMUD Criada\n\n${casa} → ${ambiente}\n👤 ${usuario}${commitInfo}\n🔗 ${`https://app.clickup.com/t/${taskId}`}\n\n⏳ Aguardando aprovação...`;
     await sendDiscordNotification(discordWebhookUrl, gmudCreatedMessage);
 
     // Adicionar comentário com informações da pipeline
     if (pipelineUrl) {
       try {
-        const comment = `🚀 **Pipeline iniciada por ${usuario}**\n\n📋 **Detalhes:**\n- Casa: ${casa}\n- Ambiente: ${ambiente}\n- Usuário: ${usuario}\n- Pipeline: ${pipelineUrl}\n\n⏳ **Aguardando aprovação...**`;
+        const comment = `🚀 Pipeline iniciada por ${usuario}\n\n📋 Detalhes:\n• Casa: ${casa}\n• Ambiente: ${ambiente}\n• Pipeline: ${pipelineUrl}\n\n⏳ Aguardando aprovação...`;
         await addComment(headers, taskId, comment);
         core.info(`Comentário adicionado com link da pipeline`);
       } catch (error) {
@@ -225,9 +228,10 @@ async function main() {
         core.info(`🔗 Link da GMUD aprovada: https://app.clickup.com/t/${taskId}`);
         
         // Notificar Discord - GMUD aprovada
-        const commitMessage = process.env.GITHUB_EVENT_HEAD_COMMIT_MESSAGE || 'N/A';
-        const commitSha = process.env.GITHUB_SHA?.substring(0, 7) || 'N/A';
-        const gmudApprovedMessage = `✅ **GMUD Aprovada**\n\n**${casa}** → ${ambiente}\n👤 ${usuario}\n📝 \`${commitSha}\` ${commitMessage}\n🔗 [Ver no ClickUp](https://app.clickup.com/t/${taskId})\n\n🚀 **Deploy iniciado**`;
+        const commitMessage = process.env.GITHUB_EVENT_HEAD_COMMIT_MESSAGE || '';
+        const commitSha = process.env.GITHUB_SHA?.substring(0, 7) || '';
+        const commitInfo = commitSha && commitMessage ? `\n📝 \`${commitSha}\` ${commitMessage}` : '';
+        const gmudApprovedMessage = `✅ GMUD Aprovada\n\n${casa} → ${ambiente}\n👤 ${usuario}${commitInfo}\n🔗 ${`https://app.clickup.com/t/${taskId}`}\n\n🚀 Deploy iniciado`;
         await sendDiscordNotification(discordWebhookUrl, gmudApprovedMessage);
         
         finalStatus = currentStatus;
