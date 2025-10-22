@@ -143,7 +143,7 @@ async function main() {
     core.setOutput('task_id', taskId);
 
     // Notificar Discord - GMUD criada
-    const gmudCreatedMessage = `📋 **GMUD aberta para o Repo ${casa}**\n\n🔗 **Link**: https://app.clickup.com/t/${taskId}\n👤 **Usuário**: ${usuario}\n🌍 **Ambiente**: ${ambiente}\n⏳ **Status**: ${statusPending}`;
+    const gmudCreatedMessage = `🚀 **Nova GMUD Criada**\n\n**${casa}** → ${ambiente}\n👤 ${usuario}\n🔗 [Abrir no ClickUp](https://app.clickup.com/t/${taskId})\n\n⏳ **Aguardando aprovação...**`;
     await sendDiscordNotification(discordWebhookUrl, gmudCreatedMessage);
 
     // Adicionar comentário com informações da pipeline
@@ -172,7 +172,7 @@ async function main() {
         core.info(`🔗 Link da GMUD aprovada: https://app.clickup.com/t/${taskId}`);
         
         // Notificar Discord - GMUD aprovada
-        const gmudApprovedMessage = `✅ **GMUD Aprovada para o Repo ${casa}**\n\n🔗 **Link**: https://app.clickup.com/t/${taskId}\n👤 **Usuário**: ${usuario}\n🌍 **Ambiente**: ${ambiente}\n🚀 **Deploy iniciado**`;
+        const gmudApprovedMessage = `✅ **GMUD Aprovada**\n\n**${casa}** → ${ambiente}\n👤 ${usuario}\n🔗 [Ver no ClickUp](https://app.clickup.com/t/${taskId})\n\n🚀 **Deploy iniciado**`;
         await sendDiscordNotification(discordWebhookUrl, gmudApprovedMessage);
         
         finalStatus = currentStatus;
