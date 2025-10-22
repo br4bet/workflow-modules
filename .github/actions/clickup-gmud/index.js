@@ -103,6 +103,7 @@ async function main() {
     core.info(`Criando GMUD: ${taskName} @ list ${listId} (status: ${statusPending})`);
     const taskId = await createTask(headers, listId, taskName, statusPending);
     core.info(`GMUD criada com ID: ${taskId}`);
+    core.info(`🔗 Link da GMUD: https://app.clickup.com/t/${taskId}`);
     core.setOutput('task_id', taskId);
 
     // Adicionar comentário com informações da pipeline
@@ -128,6 +129,7 @@ async function main() {
       
       if (currentStatus === statusApproved.toUpperCase()) {
         core.info('✅ GMUD aprovada! Continuando o deploy...');
+        core.info(`🔗 Link da GMUD aprovada: https://app.clickup.com/t/${taskId}`);
         finalStatus = currentStatus;
         core.setOutput('approved', 'true');
         core.setOutput('status', currentStatus);
@@ -154,6 +156,7 @@ async function main() {
       try {
         await updateTaskStatus(headers, taskId, statusComplete);
         core.info(`GMUD marcada como ${statusComplete}`);
+        core.info(`🔗 Link da GMUD finalizada: https://app.clickup.com/t/${taskId}`);
       } catch (error) {
         core.warning(`Falha ao marcar como ${statusComplete}: ${error.message}`);
       }
