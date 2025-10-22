@@ -1,4 +1,4 @@
-import fetch from 'node-fetch';
+// Usando fetch nativo do Node.js 20+
 
 const core = {
   getInput: (key, options = {}) => {
