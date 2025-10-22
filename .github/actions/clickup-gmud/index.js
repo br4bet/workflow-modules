@@ -242,6 +242,15 @@ async function main() {
       
       if (currentStatus === statusRejected.toUpperCase()) {
         core.error('❌ GMUD negada! Abortando deploy...');
+        core.info(`🔗 Link da GMUD negada: https://app.clickup.com/t/${taskId}`);
+        
+        // Notificar Discord - GMUD negada
+        const commitMessage = process.env.GITHUB_EVENT_HEAD_COMMIT_MESSAGE || '';
+        const commitSha = process.env.GITHUB_SHA?.substring(0, 7) || '';
+        const commitInfo = commitSha && commitMessage ? `\n📝 \`${commitSha}\` ${commitMessage}` : '';
+        const gmudRejectedMessage = `❌ GMUD Negada\n\n${casa} → ${ambiente}\n👤 ${usuario}${commitInfo}\n🔗 ${`https://app.clickup.com/t/${taskId}`}\n\n🚫 Deploy cancelado`;
+        await sendDiscordNotification(discordWebhookUrl, gmudRejectedMessage);
+        
         finalStatus = currentStatus;
         core.setOutput('approved', 'false');
         core.setOutput('status', currentStatus);
@@ -252,6 +261,16 @@ async function main() {
     }
     
     if (!finalStatus) {
+      core.error(`⏰ Timeout aguardando aprovação (${timeoutMinutes} minutos)`);
+      core.info(`🔗 Link da GMUD: https://app.clickup.com/t/${taskId}`);
+      
+      // Notificar Discord - Timeout
+      const commitMessage = process.env.GITHUB_EVENT_HEAD_COMMIT_MESSAGE || '';
+      const commitSha = process.env.GITHUB_SHA?.substring(0, 7) || '';
+      const commitInfo = commitSha && commitMessage ? `\n📝 \`${commitSha}\` ${commitMessage}` : '';
+      const timeoutMessage = `⏰ GMUD Timeout\n\n${casa} → ${ambiente}\n👤 ${usuario}${commitInfo}\n🔗 ${`https://app.clickup.com/t/${taskId}`}\n\n⏰ Deploy cancelado por timeout`;
+      await sendDiscordNotification(discordWebhookUrl, timeoutMessage);
+      
       throw new Error(`Timeout aguardando aprovação (${timeoutMinutes} minutos)`);
     }
 
