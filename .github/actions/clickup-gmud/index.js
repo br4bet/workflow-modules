@@ -120,6 +120,8 @@ async function main() {
     const completeOnSuccess = (core.getInput('complete_on_success') || 'true').toLowerCase() === 'true';
     const discordWebhookUrl = core.getInput('discord_webhook_url') || process.env.DISCORD_WEBHOOK_URL;
     core.info(`Discord webhook configurado: ${discordWebhookUrl ? 'Sim' : 'Não'}`);
+    core.info(`Input discord_webhook_url: ${core.getInput('discord_webhook_url') || 'não fornecido'}`);
+    core.info(`Env DISCORD_WEBHOOK_URL: ${process.env.DISCORD_WEBHOOK_URL || 'não definido'}`);
 
     const headers = getAuthHeader(token);
     const now = new Date();
