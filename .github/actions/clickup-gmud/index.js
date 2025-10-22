@@ -101,6 +101,46 @@ async function sendDiscordNotification(webhookUrl, message) {
   }
 }
 
+function generateGmudDescription(casa, ambiente, usuario, pipelineUrl, includeCommitInfo, includePrInfo) {
+  let description = `🚀 **Deploy Automatizado**\n\n`;
+  
+  description += `**📋 Detalhes do Deploy:**\n`;
+  description += `• **Sistema:** ${casa}\n`;
+  description += `• **Ambiente:** ${ambiente}\n`;
+  description += `• **Executado por:** ${usuario}\n`;
+  description += `• **Data/Hora:** ${new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}\n\n`;
+  
+  if (pipelineUrl) {
+    description += `**🔗 Links:**\n`;
+    description += `• [Pipeline GitHub](${pipelineUrl})\n\n`;
+  }
+  
+  if (includeCommitInfo) {
+    const commitSha = process.env.GITHUB_SHA?.substring(0, 7) || 'N/A';
+    const commitMessage = process.env.GITHUB_EVENT_HEAD_COMMIT_MESSAGE || 'N/A';
+    const commitAuthor = process.env.GITHUB_EVENT_HEAD_COMMIT_AUTHOR_NAME || 'N/A';
+    
+    description += `**📝 Informações do Commit:**\n`;
+    description += `• **SHA:** \`${commitSha}\`\n`;
+    description += `• **Mensagem:** ${commitMessage}\n`;
+    description += `• **Autor:** ${commitAuthor}\n\n`;
+  }
+  
+  if (includePrInfo && process.env.GITHUB_EVENT_NAME === 'pull_request') {
+    const prNumber = process.env.GITHUB_EVENT_NUMBER || 'N/A';
+    const prTitle = process.env.GITHUB_EVENT_PULL_REQUEST_TITLE || 'N/A';
+    
+    description += `**🔀 Informações do PR:**\n`;
+    description += `• **Número:** #${prNumber}\n`;
+    description += `• **Título:** ${prTitle}\n\n`;
+  }
+  
+  description += `**⏳ Status:** Aguardando aprovação para prosseguir com o deploy.\n\n`;
+  description += `**📌 Observações:** Esta GMUD foi criada automaticamente pela pipeline de deploy.`;
+  
+  return description;
+}
+
 async function main() {
   try {
     // Inputs
@@ -119,6 +159,8 @@ async function main() {
     const timeoutMinutes = parseInt(core.getInput('timeout_minutes') || '60', 10);
     const completeOnSuccess = (core.getInput('complete_on_success') || 'true').toLowerCase() === 'true';
     const discordWebhookUrl = core.getInput('discord_webhook_url') || process.env.DISCORD_WEBHOOK_URL;
+    const includeCommitInfo = (core.getInput('include_commit_info') || 'true').toLowerCase() === 'true';
+    const includePrInfo = (core.getInput('include_pr_info') || 'true').toLowerCase() === 'true';
     core.info(`Discord webhook configurado: ${discordWebhookUrl ? 'Sim' : 'Não'}`);
     core.info(`Input discord_webhook_url: ${core.getInput('discord_webhook_url') || 'não fornecido'}`);
     core.info(`Env DISCORD_WEBHOOK_URL: ${process.env.DISCORD_WEBHOOK_URL || 'não definido'}`);
@@ -141,6 +183,15 @@ async function main() {
     core.info(`GMUD criada com ID: ${taskId}`);
     core.info(`🔗 Link da GMUD: https://app.clickup.com/t/${taskId}`);
     core.setOutput('task_id', taskId);
+
+    // Adicionar descrição detalhada à GMUD
+    try {
+      const description = generateGmudDescription(casa, ambiente, usuario, pipelineUrl, includeCommitInfo, includePrInfo);
+      await addComment(headers, taskId, description);
+      core.info('📝 Descrição detalhada adicionada à GMUD');
+    } catch (error) {
+      core.warning(`Falha ao adicionar descrição: ${error.message}`);
+    }
 
     // Notificar Discord - GMUD criada
     const gmudCreatedMessage = `🚀 **Nova GMUD Criada**\n\n**${casa}** → ${ambiente}\n👤 ${usuario}\n🔗 [Abrir no ClickUp](https://app.clickup.com/t/${taskId})\n\n⏳ **Aguardando aprovação...**`;

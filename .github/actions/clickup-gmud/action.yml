@@ -48,6 +48,12 @@ inputs:
   discord_webhook_url:
     description: 'URL do webhook do Discord para notificações'
     required: false
+  include_commit_info:
+    description: 'Incluir informações do commit na GMUD'
+    default: 'true'
+  include_pr_info:
+    description: 'Incluir informações do PR na GMUD'
+    default: 'true'
 
 outputs:
   task_id:
