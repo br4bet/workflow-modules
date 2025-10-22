@@ -194,7 +194,9 @@ async function main() {
     }
 
     // Notificar Discord - GMUD criada
-    const gmudCreatedMessage = `🚀 **Nova GMUD Criada**\n\n**${casa}** → ${ambiente}\n👤 ${usuario}\n🔗 [Abrir no ClickUp](https://app.clickup.com/t/${taskId})\n\n⏳ **Aguardando aprovação...**`;
+    const commitMessage = process.env.GITHUB_EVENT_HEAD_COMMIT_MESSAGE || 'N/A';
+    const commitSha = process.env.GITHUB_SHA?.substring(0, 7) || 'N/A';
+    const gmudCreatedMessage = `🚀 **Nova GMUD Criada**\n\n**${casa}** → ${ambiente}\n👤 ${usuario}\n📝 \`${commitSha}\` ${commitMessage}\n🔗 [Abrir no ClickUp](https://app.clickup.com/t/${taskId})\n\n⏳ **Aguardando aprovação...**`;
     await sendDiscordNotification(discordWebhookUrl, gmudCreatedMessage);
 
     // Adicionar comentário com informações da pipeline
@@ -223,7 +225,9 @@ async function main() {
         core.info(`🔗 Link da GMUD aprovada: https://app.clickup.com/t/${taskId}`);
         
         // Notificar Discord - GMUD aprovada
-        const gmudApprovedMessage = `✅ **GMUD Aprovada**\n\n**${casa}** → ${ambiente}\n👤 ${usuario}\n🔗 [Ver no ClickUp](https://app.clickup.com/t/${taskId})\n\n🚀 **Deploy iniciado**`;
+        const commitMessage = process.env.GITHUB_EVENT_HEAD_COMMIT_MESSAGE || 'N/A';
+        const commitSha = process.env.GITHUB_SHA?.substring(0, 7) || 'N/A';
+        const gmudApprovedMessage = `✅ **GMUD Aprovada**\n\n**${casa}** → ${ambiente}\n👤 ${usuario}\n📝 \`${commitSha}\` ${commitMessage}\n🔗 [Ver no ClickUp](https://app.clickup.com/t/${taskId})\n\n🚀 **Deploy iniciado**`;
         await sendDiscordNotification(discordWebhookUrl, gmudApprovedMessage);
         
         finalStatus = currentStatus;
