@@ -1,0 +1,59 @@
+name: 'ClickUp GMUD Gate'
+description: 'Cria GMUD no ClickUp, aguarda aprovação e conclui automaticamente'
+author: 'CometaGaming DevOps'
+branding:
+  icon: 'check-circle'
+  color: 'blue'
+
+inputs:
+  clickup_token:
+    description: 'Personal token (pk_...) ou Bearer token OAuth'
+    required: true
+  list_id:
+    description: 'ClickUp List ID (ex: 901321558663)'
+    required: true
+  casa:
+    description: 'Nome da casa/sistema (ex: br4bet)'
+    required: true
+  ambiente:
+    description: 'Ambiente (dev|hml|prd)'
+    required: true
+  usuario:
+    description: 'Usuário que executou a GMUD (ex: rafael.silva)'
+    required: false
+  pipeline_url:
+    description: 'URL da pipeline para referência'
+    required: false
+  status_pending:
+    description: 'Status inicial da GMUD'
+    default: 'EM ANÁLISE'
+  status_approved:
+    description: 'Status que libera o deploy'
+    default: 'APROVADAS'
+  status_rejected:
+    description: 'Status que aborta o deploy'
+    default: 'NEGADAS'
+  status_complete:
+    description: 'Status final ao concluir deploy'
+    default: 'COMPLETE'
+  poll_interval_seconds:
+    description: 'Intervalo de polling em segundos'
+    default: '30'
+  timeout_minutes:
+    description: 'Timeout de espera em minutos'
+    default: '60'
+  complete_on_success:
+    description: 'Marcar como COMPLETE após deploy?'
+    default: 'true'
+
+outputs:
+  task_id:
+    description: 'ID da task/GMUD criada'
+  approved:
+    description: 'true se aprovada, false se negada'
+  status:
+    description: 'Status final da GMUD'
+
+runs:
+  using: 'node20'
+  main: 'index.js'

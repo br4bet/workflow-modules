@@ -1,0 +1,98 @@
+name: Deploy com GMUD ClickUp - Completo
+
+on:
+  workflow_dispatch:
+    inputs:
+      casa:
+        description: 'Nome da casa (ex: br4bet)'
+        required: true
+        type: string
+      ambiente:
+        description: 'Ambiente (dev|hml|prd)'
+        required: true
+        type: string
+        default: 'hml'
+      branch:
+        description: 'Branch para deploy'
+        required: false
+        type: string
+        default: 'main'
+
+env:
+  LIST_ID: '901321558663'
+
+jobs:
+  gmud-gate:
+    runs-on: ubuntu-latest
+    outputs:
+      task_id: ${{ steps.gate.outputs.task_id }}
+      approved: ${{ steps.gate.outputs.approved }}
+      gmud_url: ${{ steps.gate.outputs.gmud_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+
+      - name: ClickUp GMUD Gate
+        id: gate
+        uses: ./.github/actions/clickup-gmud
+        with:
+          clickup_token: ${{ secrets.CLICKUP_TOKEN }}
+          list_id: ${{ env.LIST_ID }}
+          casa: ${{ inputs.casa }}
+          ambiente: ${{ inputs.ambiente }}
+          usuario: ${{ github.actor }}
+          pipeline_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          timeout_minutes: '60'
+          poll_interval_seconds: '30'
+
+      - name: Exibir link da GMUD
+        run: |
+          echo "📋 GMUD criada: ${{ steps.gate.outputs.task_id }}"
+          echo "🔗 Link: ${{ steps.gate.outputs.gmud_url }}"
+          echo "👤 Usuário: ${{ github.actor }}"
+          echo "🏠 Casa: ${{ inputs.casa }}"
+          echo "🌍 Ambiente: ${{ inputs.ambiente }}"
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: gmud-gate
+    if: ${{ success() }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+
+      - name: Deploy
+        run: |
+          echo "🚀 Iniciando deploy de ${{ inputs.casa }} para ${{ inputs.ambiente }}"
+          echo "👤 Executado por: ${{ github.actor }}"
+          echo "📋 GMUD: ${{ needs.gmud-gate.outputs.task_id }}"
+          echo "🔗 Link GMUD: ${{ needs.gmud-gate.outputs.gmud_url }}"
+          
+          # Aqui você coloca seu script de deploy real
+          # ./deploy.sh ${{ inputs.casa }} ${{ inputs.ambiente }}
+
+      - name: Notificar sucesso
+        run: |
+          echo "✅ Deploy concluído com sucesso!"
+          echo "📋 GMUD: ${{ needs.gmud-gate.outputs.task_id }}"
+
+  notify-complete:
+    runs-on: ubuntu-latest
+    needs: [gmud-gate, deploy]
+    if: ${{ always() }}
+    steps:
+      - name: Notificar conclusão
+        run: |
+          if [ "${{ needs.deploy.result }}" == "success" ]; then
+            echo "✅ Deploy concluído com sucesso"
+            echo "📋 GMUD: ${{ needs.gmud-gate.outputs.task_id }}"
+            echo "🔗 Link: ${{ needs.gmud-gate.outputs.gmud_url }}"
+          else
+            echo "❌ Deploy falhou"
+            echo "📋 GMUD: ${{ needs.gmud-gate.outputs.task_id }}"
+            echo "🔗 Link: ${{ needs.gmud-gate.outputs.gmud_url }}"
+          fi
